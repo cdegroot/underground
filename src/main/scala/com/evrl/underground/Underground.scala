@@ -19,24 +19,23 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister],
   // TODO add queue processor
   disruptor.handleEventsWith(ReplicatorProcessor(replicator), PersisterProcessor(persister)).then(ProcessorProcessor(processor))
 
-  val ringBuffer = disruptor.start()
+  val ringBuffer = disruptor.start
 
   def process(message: Array[Byte]) {
-    val sequence = ringBuffer.next()
+    val sequence = ringBuffer.next
     val event = ringBuffer.get(sequence)
     event.data = message
     ringBuffer.publish(sequence)
   }
 
   def shutdown {
-    disruptor.halt()
+    disruptor.halt
   }
 }
 
 case class ReplicatorProcessor(replicator: Option[Replicator]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage, sequence: Long, endOfBatch: Boolean) {
     replicator.map(_.replicate(message))
-
   }
 }
 

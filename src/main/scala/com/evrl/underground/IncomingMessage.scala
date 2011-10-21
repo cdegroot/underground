@@ -7,8 +7,8 @@ import com.lmax.disruptor.EventFactory
 // ring, we just shove in the bytes from the wire, to be interpreted later. If
 // we want, later on, message parsing can be part of the ring buffer's processing
 // pipeline (will put another core to good use :-))
-class IncomingMessage(var data : Array[Byte])
+case class IncomingMessage(var data : Array[Byte])
 
 object IncomingMessageFactory extends EventFactory[IncomingMessage]{
-  def newInstance() = new IncomingMessage(null)
+  def newInstance = IncomingMessage(null)
 }
