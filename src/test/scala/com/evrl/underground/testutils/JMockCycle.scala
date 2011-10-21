@@ -25,7 +25,7 @@ import scala.reflect.Manifest
 import org.jmock.lib.legacy.ClassImposteriser
 import org.scalatest.mock.JMockExpectations
 
-// Blatantly stolen from ScalaTest to expose context :)
+// Blatantly stolen from ScalaTest to expose context, etcetera :)
 final class JMockCycle {
 
   val context = new Mockery
