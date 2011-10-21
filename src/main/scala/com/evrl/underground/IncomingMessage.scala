@@ -10,5 +10,5 @@ import com.lmax.disruptor.EventFactory
 case class IncomingMessage(var data : Array[Byte])
 
 object IncomingMessageFactory extends EventFactory[IncomingMessage]{
-  def newInstance() = IncomingMessage(null)
+  def newInstance = IncomingMessage(null)
 }
