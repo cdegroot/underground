@@ -65,7 +65,7 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
       }
     }
 
-    val underground = new Underground(Some(replicator), Some(persister), Some(processor))
+    underground = new Underground(Some(replicator), Some(persister), Some(processor))
     underground.process(message.getBytes())
     while (ticker < 3) {
       Thread.`yield`

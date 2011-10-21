@@ -9,7 +9,8 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister],
   val executor = Executors.newFixedThreadPool(3)
 
   // TODO - make at least the ring buffer size configurable
-  val disruptor = new Disruptor(IncomingMessageFactory,
+  val disruptor = new Disruptor(
+    IncomingMessageFactory,
     128,
     executor,
     ClaimStrategy.Option.SINGLE_THREADED,
@@ -27,7 +28,9 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister],
     ringBuffer.publish(sequence)
   }
 
-  def shutdown = disruptor.halt()
+  def shutdown {
+    disruptor.halt()
+  }
 }
 
 case class ReplicatorProcessor(replicator: Option[Replicator]) extends EventHandler[IncomingMessage] {
