@@ -36,7 +36,6 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister],
 case class ReplicatorProcessor(replicator: Option[Replicator]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage, sequence: Long, endOfBatch: Boolean) {
     replicator.map(_.replicate(message))
-
   }
 }
 
