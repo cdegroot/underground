@@ -4,7 +4,7 @@ import com.lmax.disruptor.dsl.Disruptor
 import java.util.concurrent.Executors
 import com.lmax.disruptor.{EventHandler, WaitStrategy, ClaimStrategy}
 
-class Underground(replicator: Option[Replicator],  persister: Option[Persister]) {
+class Underground(replicator: Option[Replicator],  persister: Option[Persister], processor: Option[Processor]) {
 
   val executor = Executors.newFixedThreadPool(3)
 
@@ -16,7 +16,7 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister])
     WaitStrategy.Option.YIELDING)
 
   // TODO add queue processor
-  disruptor.handleEventsWith(ReplicatorProcessor(replicator)).then(PersisterProcessor(persister))
+  disruptor.handleEventsWith(ReplicatorProcessor(replicator), PersisterProcessor(persister)).then(ProcessorProcessor(processor))
 
   val ringBuffer = disruptor.start()
 
@@ -40,5 +40,11 @@ case class ReplicatorProcessor(replicator: Option[Replicator]) extends EventHand
 case class PersisterProcessor(persister: Option[Persister]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage, sequence: Long, endOfBatch: Boolean) {
     persister.map(_.persist(message))
+  }
+}
+
+case class ProcessorProcessor(processor: Option[Processor]) extends EventHandler[IncomingMessage] {
+  def onEvent(message: IncomingMessage,  sequence: Long,  endOfBatch: Boolean) {
+    processor.map(_.process(message))
   }
 }
