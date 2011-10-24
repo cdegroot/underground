@@ -70,11 +70,11 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
     while (ticker < 3) {
       Thread.`yield`
     }
-    assert(persisterTick > 0)
-    assert(replicatorTick > 0)
-    assert(processorTick > 0)
-    assert(persisterTick < processorTick)
-    assert(replicatorTick < processorTick)
+    assert(persisterTick > 0, "Persister did not trigger")
+    assert(replicatorTick > 0, "Replicator did not trigger")
+    assert(processorTick > 0, "Processor did not trigger")
+    assert(persisterTick < processorTick, "Persister did not trigger before processor")
+    assert(replicatorTick < processorTick, "Replicator did not trigger before processor")
   }
 
   override def afterEach {
