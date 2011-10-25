@@ -4,7 +4,7 @@ import com.lmax.disruptor.dsl.Disruptor
 import java.util.concurrent.Executors
 import com.lmax.disruptor.{EventHandler, WaitStrategy, ClaimStrategy}
 
-class Underground(replicator: Option[Replicator],  persister: Option[Persister], processor: Option[Processor]) {
+class Underground(replicator: Option[Replicator],  persister: Option[Persister], processor: Option[Processor]) extends IncomingDataHandler {
 
   val executor = Executors.newFixedThreadPool(3)
 
@@ -22,7 +22,7 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister],
 
   val ringBuffer = disruptor.start
 
-  def process(message: Array[Byte]) {
+  override def process(message: Array[Byte]) {
     val sequence = ringBuffer.next
     val event = ringBuffer.get(sequence)
     event.data = message
