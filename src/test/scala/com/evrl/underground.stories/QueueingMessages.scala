@@ -4,6 +4,7 @@ import com.evrl.underground.testutils.IncomingMessageMatcherFactory._
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.mock.JMockExpectations
 import testutils.{IncomingMessageMatcher, JMockCycle}
+import book.example.async.Timeout
 
 /**
  * Story-level tests about queueing messages
@@ -65,9 +66,10 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
       }
     }
 
+    val timeout = new Timeout(500)
     underground = new Underground(Some(replicator), Some(persister), Some(processor))
     underground.process(message.getBytes())
-    while (ticker < 3) {
+    while (ticker < 3 && !timeout.hasTimedOut) {
       Thread.`yield`
     }
     assert(persisterTick > 0, "Persister did not trigger")
@@ -93,8 +95,9 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
       expectations(e, matcher); then(ready.is("yes"))
     }
     whenExecuting  {
+      val timeout = new Timeout(500)
       underground.process(message.getBytes())
-      while (!ready.is("yes").isActive) {
+      while (!ready.is("yes").isActive && !timeout.hasTimedOut) {
         Thread.`yield`
       }
     }

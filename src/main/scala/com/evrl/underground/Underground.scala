@@ -16,8 +16,9 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister],
     ClaimStrategy.Option.SINGLE_THREADED,
     WaitStrategy.Option.YIELDING)
 
-  // TODO add queue processor
-  disruptor.handleEventsWith(ReplicatorProcessor(replicator), PersisterProcessor(persister)).then(ProcessorProcessor(processor))
+  disruptor
+    .handleEventsWith(ReplicationHandler(replicator), PersistenceHandler(persister))
+    .then(ProcessingHandler(processor))
 
   val ringBuffer = disruptor.start
 
@@ -33,19 +34,19 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister],
   }
 }
 
-case class ReplicatorProcessor(replicator: Option[Replicator]) extends EventHandler[IncomingMessage] {
+case class ReplicationHandler(replicator: Option[Replicator]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage, sequence: Long, endOfBatch: Boolean) {
     replicator.map(_.replicate(message))
   }
 }
 
-case class PersisterProcessor(persister: Option[Persister]) extends EventHandler[IncomingMessage] {
+case class PersistenceHandler(persister: Option[Persister]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage, sequence: Long, endOfBatch: Boolean) {
     persister.map(_.persist(message))
   }
 }
 
-case class ProcessorProcessor(processor: Option[Processor]) extends EventHandler[IncomingMessage] {
+case class ProcessingHandler(processor: Option[Processor]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage,  sequence: Long,  endOfBatch: Boolean) {
     processor.map(_.process(message))
   }
