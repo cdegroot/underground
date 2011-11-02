@@ -24,9 +24,9 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
   // the JDK, whoever designed the thing should not be allowed to write a single line
   // of code again). Also, the class under test really is dependent on the file system,
   // most of the code in there should just pass on calls.
+
+
   test("MarshallerTest persists data on reception") {
-    // One of these brittle tests. However, we'll need to ensure that stuff
-    // actually lands on disk...
     val persister = new BasicSequentialFilePersister(randomTestDir)
     val message = "Hello, world".getBytes
     val incomingMessage = new IncomingMessage(message)
@@ -50,13 +50,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
 
   test("MarshallerTest persists multiple messages and can feed them back") {
     val persister = new BasicSequentialFilePersister(randomTestDir)
-    val message1 = "Hello".getBytes
-    val message2 = ", world".getBytes
-    val im1 = new IncomingMessage(message1)
-    val im2 = new IncomingMessage(message2)
-
-    persister.persist(im1)
-    persister.persist(im2)
+    val (message1, message2) = logSomeMessagesTo(persister)
     persister.shutdown()
 
     val muncher = mock[IncomingDataHandler]
@@ -71,13 +65,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
 
   test("Marshaller will ignore partially written message") {
     val persister = new BasicSequentialFilePersister(randomTestDir)
-    val message1 = "Hello".getBytes
-    val message2 = ", world".getBytes
-    val im1 = new IncomingMessage(message1)
-    val im2 = new IncomingMessage(message2)
-
-    persister.persist(im1)
-    persister.persist(im2)
+    val (message1, message2) = logSomeMessagesTo(persister)
     persister.shutdown()
 
     // Now copy, truncate, and write short output
@@ -98,7 +86,17 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
     whenExecuting {
       persister.feedMessagesTo(muncher)
     }
+  }
 
+  def logSomeMessagesTo(persister : BasicSequentialFilePersister) : (Array[Byte], Array[Byte]) = {
+    val message1 = "Hello".getBytes
+    val message2 = ", world".getBytes
+    val im1 = new IncomingMessage(message1)
+    val im2 = new IncomingMessage(message2)
 
+    persister.persist(im1)
+    persister.persist(im2)
+
+    return (message1, message2)
   }
 }
