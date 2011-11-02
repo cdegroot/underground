@@ -11,7 +11,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
   val cycle = new JMockCycle
   import cycle._
 
-  val randomTestDir = "/tmp/ug-" + UUID.randomUUID
+  val randomTestDir = System.getProperty("java.io.tmpdir") + "/ug-" + UUID.randomUUID
   val logFile = randomTestDir + "/message.log"
 
   override def beforeEach = new File(randomTestDir).mkdirs
