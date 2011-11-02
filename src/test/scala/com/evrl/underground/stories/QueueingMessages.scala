@@ -1,10 +1,11 @@
-package com.evrl.underground
+package com.evrl.underground.stories
 
 import com.evrl.underground.testutils.IncomingMessageMatcherFactory._
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.mock.JMockExpectations
-import testutils.{IncomingMessageMatcher, JMockCycle}
+import com.evrl.underground.testutils.{IncomingMessageMatcher, JMockCycle}
 import book.example.async.Timeout
+import com.evrl.underground._
 
 /**
  * Story-level tests about queueing messages
