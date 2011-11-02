@@ -36,8 +36,10 @@ class BasicSequentialFilePersister(baseDirName: String) extends Persister with M
       val messageLength = unmarshall.int
       val data = new Array[Byte](messageLength)
       if (messageLength > 0) {
-        readStream.read(data, 0, messageLength)
-        sink.process(data)
+        val numRead = readStream.read(data, 0, messageLength)
+        if (numRead == messageLength) {
+          sink.process(data)
+        }
       }
       processedLength = processedLength + messageLength + 4
     }

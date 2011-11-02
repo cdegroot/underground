@@ -3,9 +3,9 @@ package com.evrl.underground.stories
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import com.evrl.underground.testutils.JMockCycle
 import java.util.UUID
-import java.io.{FileInputStream, File}
 import org.junit.Assert.assertArrayEquals
 import com.evrl.underground.{Unmarshaller, IncomingDataHandler, IncomingMessage, BasicSequentialFilePersister}
+import java.io.{FileOutputStream, FileInputStream, File}
 
 class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndAfterEach {
   val cycle = new JMockCycle
@@ -47,6 +47,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
     assertArrayEquals(buffer, message)
   }
 
+
   test("MarshallerTest persists multiple messages and can feed them back") {
     val persister = new BasicSequentialFilePersister(randomTestDir)
     val message1 = "Hello".getBytes
@@ -66,5 +67,38 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
     whenExecuting {
       persister.feedMessagesTo(muncher)
     }
+  }
+
+  test("Marshaller will ignore partially written message") {
+    val persister = new BasicSequentialFilePersister(randomTestDir)
+    val message1 = "Hello".getBytes
+    val message2 = ", world".getBytes
+    val im1 = new IncomingMessage(message1)
+    val im2 = new IncomingMessage(message2)
+
+    persister.persist(im1)
+    persister.persist(im2)
+    persister.shutdown()
+
+    // Now copy, truncate, and write short output
+    val readStream = new FileInputStream(persister.logFile)
+    val buffer = new Array[Byte](1024)
+    val oldLength = readStream.read(buffer)
+    readStream.close()
+    persister.logFile.delete()
+    val writeStream = new FileOutputStream(persister.logFile)
+    writeStream.write(buffer, 0, oldLength - 2)
+    writeStream.close()
+
+    // garbled message should be silently dropped
+    val muncher = context.mock(classOf[IncomingDataHandler], "muncher2")
+    expecting { e => import e._
+      oneOf(muncher).process(message1)
+    }
+    whenExecuting {
+      persister.feedMessagesTo(muncher)
+    }
+
+
   }
 }

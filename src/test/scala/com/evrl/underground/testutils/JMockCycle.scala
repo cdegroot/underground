@@ -36,7 +36,6 @@ final class JMockCycle {
     context.mock(manifest.erasure.asInstanceOf[Class[T]])
   }
 
-
   def expecting(fun: JMockExpectations => Unit) {
     val e = new JMockExpectations
     fun(e)
