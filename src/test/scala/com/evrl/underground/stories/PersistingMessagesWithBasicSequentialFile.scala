@@ -4,7 +4,7 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import com.evrl.underground.testutils.JMockCycle
 import java.util.UUID
 import org.junit.Assert.assertArrayEquals
-import com.evrl.underground.{Unmarshaller, IncomingDataHandler, IncomingMessage, BasicSequentialFilePersister}
+import com.evrl.underground.{Unmarshaller, IncomingDataHandler, IncomingMessage, BasicSequentialFilePersistence}
 import java.io.{FileOutputStream, FileInputStream, File}
 
 class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndAfterEach {
@@ -27,7 +27,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
 
 
   test("MarshallerTest persists data on reception") {
-    val persister = new BasicSequentialFilePersister(randomTestDir)
+    val persister = new BasicSequentialFilePersistence(randomTestDir)
     val message = "Hello, world".getBytes
     val incomingMessage = new IncomingMessage(message)
 
@@ -49,7 +49,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
 
 
   test("MarshallerTest persists multiple messages and can feed them back") {
-    val persister = new BasicSequentialFilePersister(randomTestDir)
+    val persister = new BasicSequentialFilePersistence(randomTestDir)
     val (message1, message2) = logSomeMessagesTo(persister)
     persister.shutdown()
 
@@ -64,7 +64,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
   }
 
   test("Marshaller will ignore partially written message") {
-    val persister = new BasicSequentialFilePersister(randomTestDir)
+    val persister = new BasicSequentialFilePersistence(randomTestDir)
     val (message1, message2) = logSomeMessagesTo(persister)
     persister.shutdown()
 
@@ -88,7 +88,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
     }
   }
 
-  def logSomeMessagesTo(persister : BasicSequentialFilePersister) : (Array[Byte], Array[Byte]) = {
+  def logSomeMessagesTo(persister : BasicSequentialFilePersistence) : (Array[Byte], Array[Byte]) = {
     val message1 = "Hello".getBytes
     val message2 = ", world".getBytes
     val im1 = new IncomingMessage(message1)
