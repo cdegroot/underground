@@ -44,4 +44,5 @@ class MarshallerTest extends FunSuite {
       assert(answer == 0x123456ce, "Answer 0x" + answer.toHexString + " not expected")
     }
   }
+
 }

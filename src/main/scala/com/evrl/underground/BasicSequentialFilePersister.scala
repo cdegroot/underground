@@ -1,8 +1,8 @@
 package com.evrl.underground
 
-import java.io.{FileInputStream, FileOutputStream, File}
 import com.sun.jmx.remote.internal.Unmarshal
 import java.rmi.MarshalledObject
+import java.io.{ByteArrayOutputStream, FileInputStream, FileOutputStream, File}
 
 /**
  * A very basic persister that just writes everything to a sequential log file. Not thread safe,
@@ -13,21 +13,44 @@ class BasicSequentialFilePersister(baseDirName: String) extends Persister with M
   val base = new File(baseDirName)
   base.mkdirs()
 
-  val logFile = new File(base, "message.log")
-  val writeStream = new FileOutputStream(logFile)
-  val marshall = new Marshaller(writeStream)
+  // TODO[cdg] - how to make this immutable? Do we need/want to?
+  var logFile = new File(base, "message.log")
+  var writeStream = new FileOutputStream(logFile)
+  var marshall = new Marshaller(writeStream)
 
   override def persist(message : IncomingMessage) {
+    message.operation match {
+      case Operation.Message => logMessage(message)
+      case Operation.Snapshot => snapshot(message)
+    }
+  }
+
+  def logMessage(message : IncomingMessage) {
     val bytes = message.asBytes
     marshall.int(bytes.length)
     writeStream.write(bytes)
+  }
+
+  def snapshot(message : IncomingMessage) {
+    shutdown
+    logFile.renameTo(new File(logFile.getAbsolutePath + ".0"))
+    writeStream = new FileOutputStream(logFile)
+    marshall = new Marshaller(writeStream)
+    writeSequenceToData(0, message)
   }
 
   override def shutdown {
     writeStream.close
   }
 
-  override def feedMessagesTo(sink : IncomingDataHandler) {
+  def writeSequenceToData(seq : Int, message : IncomingMessage) {
+    val bos = new ByteArrayOutputStream(4)
+    val dataMarshall = new Marshaller(bos)
+    dataMarshall.int(seq)
+    message.data = bos.toByteArray
+  }
+
+  def feedMessagesTo(sink : IncomingDataHandler) {
     val readStream = new FileInputStream(logFile)
     val unmarshall = new Unmarshaller(readStream)
     val totalLength = logFile.length()
