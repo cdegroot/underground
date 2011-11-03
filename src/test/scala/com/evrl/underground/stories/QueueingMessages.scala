@@ -18,23 +18,23 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
   var underground : Underground = null;
 
   test("queued messages should be sent to persister") {
-    val persister = mock[Persister]
+    val persister = mock[Persistence]
     checkProcessing(None, Some(persister), None) { (e, matcher) => import e._
       exactly(1).of(persister).persist(`with`(matcher))
     }
   }
 
   test("queued messages should be sent to replicator") {
-    val replicator = mock[Replicator]
+    val replicator = mock[Replication]
     checkProcessing(Some(replicator), None, None) { (e, matcher) => import e._
       exactly(1).of(replicator).replicate(`with`(matcher))
     }
   }
 
   test("queued messages should be sent to processor") {
-    val processor = mock[Processor]
+    val processor = mock[Notification]
     checkProcessing(None, None, Some(processor)) { (e, matcher) => import e._
-      exactly(1).of(processor).process(`with`(matcher))}
+      exactly(1).of(processor).notify(`with`(matcher))}
   }
 
   test("queued messages should be replicated and persisted before being processed") {
@@ -42,7 +42,7 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
     var persisterTick = 0
     var replicatorTick = 0
     var processorTick = 0
-    val persister = new Persister {
+    val persister = new Persistence {
       def persist(message: IncomingMessage) = {
         ticker.synchronized {
           ticker += 1
@@ -50,7 +50,7 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
         }
       }
     }
-    val replicator = new Replicator {
+    val replicator = new Replication {
       def replicate(message: IncomingMessage) = {
         ticker.synchronized {
           ticker += 1
@@ -58,8 +58,8 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
         }
       }
     }
-    val processor = new Processor {
-      def process(message: IncomingMessage) = {
+    val processor = new Notification {
+      def notify(message: IncomingMessage) = {
         ticker.synchronized {
           ticker += 1
           processorTick = ticker
@@ -73,11 +73,11 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
     while (ticker < 3 && !timeout.hasTimedOut) {
       Thread.`yield`
     }
-    assert(persisterTick > 0, "Persister did not trigger")
-    assert(replicatorTick > 0, "Replicator did not trigger")
-    assert(processorTick > 0, "Processor did not trigger")
-    assert(persisterTick < processorTick, "Persister did not trigger before processor")
-    assert(replicatorTick < processorTick, "Replicator did not trigger before processor")
+    assert(persisterTick > 0, "Persistence did not trigger")
+    assert(replicatorTick > 0, "Replication did not trigger")
+    assert(processorTick > 0, "Notification did not trigger")
+    assert(persisterTick < processorTick, "Persistence did not trigger before processor")
+    assert(replicatorTick < processorTick, "Replication did not trigger before processor")
   }
 
   override def afterEach {
@@ -87,7 +87,7 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
     }
   }
 
-  def checkProcessing(replicator: Option[Replicator], persister: Option[Persister], processor: Option[Processor])
+  def checkProcessing(replicator: Option[Replication], persister: Option[Persistence], processor: Option[Notification])
                      (expectations: (JMockExpectations, IncomingMessageMatcher) => Unit) {
     underground = new Underground(replicator, persister, processor)
     val ready = context.states("ready").startsAs("no")
