@@ -1,12 +1,13 @@
 package com.evrl.underground
 
 import java.io.{ByteArrayOutputStream, FileInputStream, FileOutputStream, File}
+import java.util.UUID
 
 /**
- * Very basic persistence that just writes everything to a sequential log file.
- * Not thread safe, meant to be called only from a single thread
+ * Very basic persistence that just writes everything to sequential log files.
+ * Not thread safe, because meant to be called only from a single thread
  */
-class BasicSequentialFilePersistence(baseDirName: String) extends Persistence with MessageRecovery {
+class BasicSequentialFilePersistence(val baseDirName: String) extends Persistence with MessageRecovery {
 
   val base = new File(baseDirName)
   base.mkdirs()
@@ -65,5 +66,20 @@ class BasicSequentialFilePersistence(baseDirName: String) extends Persistence wi
       processedLength = processedLength + messageLength + 4
     }
     readStream.close()
+  }
+
+  /**
+   * Dangerous! Destroy all data (up and including baseDir)
+   */
+  def destroyData {
+    base.listFiles().map(_.delete())
+    base.delete()
+  }
+}
+
+object BasicSequentialFilePersistence {
+  def onRandomDirectory : BasicSequentialFilePersistence = {
+    val randomDir = System.getProperty("java.io.tmpdir") + "/ug-" + UUID.randomUUID
+    new BasicSequentialFilePersistence(randomDir)
   }
 }

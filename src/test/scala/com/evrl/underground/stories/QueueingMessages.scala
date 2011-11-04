@@ -1,21 +1,29 @@
 package com.evrl.underground.stories
 
 import com.evrl.underground.testutils.IncomingMessageMatcherFactory._
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
 import org.scalatest.mock.JMockExpectations
 import com.evrl.underground.testutils.{IncomingMessageMatcher, JMockCycle}
 import book.example.async.Timeout
 import com.evrl.underground._
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FunSuite}
 
 /**
  * Story-level tests about queueing messages
  */
-class QueueingMessages extends FunSuite with BeforeAndAfterEach {
+class QueueingMessages extends FunSuite with BeforeAndAfter {
   val cycle = new JMockCycle
   import cycle._
 
   val message = "Hello, world!"
-  var underground : Underground = null;
+  var underground : Underground = _;
+
+  after {
+    if (underground != null) {
+      underground.shutdown
+      underground = null
+    }
+  }
+
 
   test("queued messages should be sent to persister") {
     val persister = mock[Persistence]
@@ -78,13 +86,6 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
     assert(processorTick > 0, "ProcessingLogic did not trigger")
     assert(persisterTick < processorTick, "Persistence did not trigger before processor")
     assert(replicatorTick < processorTick, "Replication did not trigger before processor")
-  }
-
-  override def afterEach {
-    if (underground != null) {
-      underground.shutdown
-      underground = null
-    }
   }
 
   def checkProcessing(replicator: Option[Replication], persister: Option[Persistence], processor: Option[ProcessingLogic])

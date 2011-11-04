@@ -1,37 +1,24 @@
 package com.evrl.underground.stories
 
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import com.evrl.underground.testutils.JMockCycle
 import java.util.UUID
 import java.io.{ByteArrayInputStream, File}
 import com.evrl.underground._
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FunSuite}
+import testutils.{SuiteOnBasicSequentialFilePersistence, JMockCycle}
 
-class Snapshotting extends FunSuite with BeforeAndAfterEach {
-  val cycle = new JMockCycle
-  import cycle._
-
-  val randomTestDir = System.getProperty("java.io.tmpdir") + "/ug-" + UUID.randomUUID
-  val logFile = randomTestDir + "/message.log"
-
-
-  override def beforeEach = new File(randomTestDir).mkdirs
-  override def afterEach = {
-    new File(logFile).delete
-    new File(randomTestDir).delete
-  }
+class Snapshotting extends SuiteOnBasicSequentialFilePersistence {
 
   test("Snapshot operation will roll over log file and set data to snapshot base name") {
-    val persister = new BasicSequentialFilePersistence(randomTestDir)
 
-    persister.persist(new IncomingMessage("hello, ".getBytes))
-    persister.persist(new IncomingMessage("world".getBytes))
+    persistence.persist(new IncomingMessage("hello, ".getBytes))
+    persistence.persist(new IncomingMessage("world".getBytes))
     val snapshotMessage = new IncomingMessage(null, Operation.Snapshot)
-    persister.persist(snapshotMessage)
-    persister.persist(new IncomingMessage("bye".getBytes))
-    persister.shutdown
+    persistence.persist(snapshotMessage)
+    persistence.persist(new IncomingMessage("bye".getBytes))
+    persistence.shutdown
 
     assert(new File(logFile).exists, "New log file was not created")
-    assert(new File(randomTestDir + "/message.log.0").exists, "Old log file was not rotated")
+    assert(new File(persistence.baseDirName + "/message.log.0").exists, "Old log file was not rotated")
 
     val unMarshaller = new Unmarshaller(new ByteArrayInputStream(snapshotMessage.data))
     val sequence = unMarshaller.int

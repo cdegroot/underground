@@ -1,38 +1,26 @@
 package com.evrl.underground.stories
 
-import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import com.evrl.underground.testutils.JMockCycle
 import java.util.UUID
 import org.junit.Assert.assertArrayEquals
 import com.evrl.underground.{Unmarshaller, IncomingDataHandler, IncomingMessage, BasicSequentialFilePersistence}
 import java.io.{FileOutputStream, FileInputStream, File}
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FunSuite}
+import com.evrl.underground.testutils.{SuiteOnBasicSequentialFilePersistence, JMockCycle}
 
-class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndAfterEach {
-  val cycle = new JMockCycle
+class PersistingMessagesWithBasicSequentialFile extends SuiteOnBasicSequentialFilePersistence {
   import cycle._
-
-  val randomTestDir = System.getProperty("java.io.tmpdir") + "/ug-" + UUID.randomUUID
-  val logFile = randomTestDir + "/message.log"
-
-  override def beforeEach = new File(randomTestDir).mkdirs
-  override def afterEach = {
-    new File(logFile).delete
-    new File(randomTestDir).delete
-  }
 
   // I don't mock File here for two reasons: the class is a bitch to mock (as usual in
   // the JDK, whoever designed the thing should not be allowed to write a single line
   // of code again). Also, the class under test really is dependent on the file system,
   // most of the code in there should just pass on calls.
 
-
   test("MarshallerTest persists data on reception") {
-    val persister = new BasicSequentialFilePersistence(randomTestDir)
     val message = "Hello, world".getBytes
     val incomingMessage = new IncomingMessage(message)
 
-    persister.persist(incomingMessage)
-    persister.shutdown
+    persistence.persist(incomingMessage)
+    persistence.shutdown
 
     val lf : File = new File(logFile)
     assert(lf.exists, "log file was not created")
@@ -49,9 +37,8 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
 
 
   test("MarshallerTest persists multiple messages and can feed them back") {
-    val persister = new BasicSequentialFilePersistence(randomTestDir)
-    val (message1, message2) = logSomeMessagesTo(persister)
-    persister.shutdown()
+    val (message1, message2) = logSomeMessagesTo(persistence)
+    persistence.shutdown()
 
     val muncher = mock[IncomingDataHandler]
     expecting { e => import e._
@@ -59,22 +46,21 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
       oneOf(muncher).process(message2)
     }
     whenExecuting {
-      persister.feedMessagesTo(muncher)
+      persistence.feedMessagesTo(muncher)
     }
   }
 
   test("Marshaller will ignore partially written message") {
-    val persister = new BasicSequentialFilePersistence(randomTestDir)
-    val (message1, message2) = logSomeMessagesTo(persister)
-    persister.shutdown()
+    val (message1, message2) = logSomeMessagesTo(persistence)
+    persistence.shutdown()
 
     // Now copy, truncate, and write short output
-    val readStream = new FileInputStream(persister.logFile)
+    val readStream = new FileInputStream(persistence.logFile)
     val buffer = new Array[Byte](1024)
     val oldLength = readStream.read(buffer)
     readStream.close()
-    persister.logFile.delete()
-    val writeStream = new FileOutputStream(persister.logFile)
+    persistence.logFile.delete()
+    val writeStream = new FileOutputStream(persistence.logFile)
     writeStream.write(buffer, 0, oldLength - 2)
     writeStream.close()
 
@@ -84,7 +70,7 @@ class PersistingMessagesWithBasicSequentialFile extends FunSuite with BeforeAndA
       oneOf(muncher).process(message1)
     }
     whenExecuting {
-      persister.feedMessagesTo(muncher)
+      persistence.feedMessagesTo(muncher)
     }
   }
 
