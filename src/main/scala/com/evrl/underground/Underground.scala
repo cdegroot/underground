@@ -8,7 +8,7 @@ class Underground(replicator: Option[Replication],  persister: Option[Persistenc
 
   val executor = Executors.newFixedThreadPool(3)
 
-  // TODO - make at least the ring buffer size configurable
+  // TODO[cdg] - make at least the ring buffer size configurable
   val disruptor = new Disruptor(
     IncomingMessageFactory,
     128,
