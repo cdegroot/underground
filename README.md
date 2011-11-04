@@ -23,6 +23,9 @@ It's fully test-driven, using Scalatest with JMock. HA is built in from the star
 not slapped on as an afterthought as many messaging products seem to have been done. HA
 also will be fully tested.
 
+The test-driven philosphy also applies to performance. We will start simple, write performance
+tests (see the perf/ subproject), and prove performance improvements before applying them.
+
 Status
 ------
 Not even alpha :)
