@@ -4,7 +4,7 @@ import com.lmax.disruptor.dsl.Disruptor
 import java.util.concurrent.Executors
 import com.lmax.disruptor.{EventHandler, WaitStrategy, ClaimStrategy}
 
-class Underground(replicator: Option[Replicator],  persister: Option[Persister], processor: Option[Processor]) extends IncomingDataHandler {
+class Underground(replicator: Option[Replication],  persister: Option[Persistence], processor: Option[Notification]) extends IncomingDataHandler {
 
   val executor = Executors.newFixedThreadPool(3)
 
@@ -34,20 +34,20 @@ class Underground(replicator: Option[Replicator],  persister: Option[Persister],
   }
 }
 
-case class ReplicationHandler(replicator: Option[Replicator]) extends EventHandler[IncomingMessage] {
+case class ReplicationHandler(replicator: Option[Replication]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage, sequence: Long, endOfBatch: Boolean) {
     replicator.map(_.replicate(message))
   }
 }
 
-case class PersistenceHandler(persister: Option[Persister]) extends EventHandler[IncomingMessage] {
+case class PersistenceHandler(persister: Option[Persistence]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage, sequence: Long, endOfBatch: Boolean) {
     persister.map(_.persist(message))
   }
 }
 
-case class ProcessingHandler(processor: Option[Processor]) extends EventHandler[IncomingMessage] {
+case class ProcessingHandler(processor: Option[Notification]) extends EventHandler[IncomingMessage] {
   def onEvent(message: IncomingMessage,  sequence: Long,  endOfBatch: Boolean) {
-    processor.map(_.process(message))
+    processor.map(_.notify(message))
   }
 }

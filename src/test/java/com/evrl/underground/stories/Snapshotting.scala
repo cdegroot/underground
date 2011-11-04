@@ -21,7 +21,7 @@ class Snapshotting extends FunSuite with BeforeAndAfterEach {
   }
 
   test("Snapshot operation will roll over log file and set data to snapshot base name") {
-    val persister = new BasicSequentialFilePersister(randomTestDir)
+    val persister = new BasicSequentialFilePersistence(randomTestDir)
 
     persister.persist(new IncomingMessage("hello, ".getBytes))
     persister.persist(new IncomingMessage("world".getBytes))

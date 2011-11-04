@@ -1,14 +1,12 @@
 package com.evrl.underground
 
-import com.sun.jmx.remote.internal.Unmarshal
-import java.rmi.MarshalledObject
 import java.io.{ByteArrayOutputStream, FileInputStream, FileOutputStream, File}
 
 /**
- * A very basic persister that just writes everything to a sequential log file. Not thread safe,
- * meant to be called only from a single thread
+ * Very basic persistence that just writes everything to a sequential log file.
+ * Not thread safe, meant to be called only from a single thread
  */
-class BasicSequentialFilePersister(baseDirName: String) extends Persister with MessageReplayer {
+class BasicSequentialFilePersistence(baseDirName: String) extends Persistence with MessageRecovery {
 
   val base = new File(baseDirName)
   base.mkdirs()
@@ -52,11 +50,11 @@ class BasicSequentialFilePersister(baseDirName: String) extends Persister with M
 
   def feedMessagesTo(sink : IncomingDataHandler) {
     val readStream = new FileInputStream(logFile)
-    val unmarshall = new Unmarshaller(readStream)
+    val unmarshalled = new Unmarshaller(readStream)
     val totalLength = logFile.length()
     var processedLength = 0
     while (processedLength < totalLength) {
-      val messageLength = unmarshall.int
+      val messageLength = unmarshalled.int
       val data = new Array[Byte](messageLength)
       if (messageLength > 0) {
         val numRead = readStream.read(data, 0, messageLength)
@@ -66,6 +64,6 @@ class BasicSequentialFilePersister(baseDirName: String) extends Persister with M
       }
       processedLength = processedLength + messageLength + 4
     }
-    readStream.close
+    readStream.close()
   }
 }
