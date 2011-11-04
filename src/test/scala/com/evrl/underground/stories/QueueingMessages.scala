@@ -32,9 +32,9 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
   }
 
   test("queued messages should be sent to processor") {
-    val processor = mock[Notification]
+    val processor = mock[ProcessingLogic]
     checkProcessing(None, None, Some(processor)) { (e, matcher) => import e._
-      exactly(1).of(processor).notify(`with`(matcher))}
+      exactly(1).of(processor).process(`with`(matcher))}
   }
 
   test("queued messages should be replicated and persisted before being processed") {
@@ -58,8 +58,8 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
         }
       }
     }
-    val processor = new Notification {
-      def notify(message: IncomingMessage) = {
+    val processor = new ProcessingLogic {
+      def process(message: IncomingMessage) = {
         ticker.synchronized {
           ticker += 1
           processorTick = ticker
@@ -75,7 +75,7 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
     }
     assert(persisterTick > 0, "Persistence did not trigger")
     assert(replicatorTick > 0, "Replication did not trigger")
-    assert(processorTick > 0, "Notification did not trigger")
+    assert(processorTick > 0, "ProcessingLogic did not trigger")
     assert(persisterTick < processorTick, "Persistence did not trigger before processor")
     assert(replicatorTick < processorTick, "Replication did not trigger before processor")
   }
@@ -87,7 +87,7 @@ class QueueingMessages extends FunSuite with BeforeAndAfterEach {
     }
   }
 
-  def checkProcessing(replicator: Option[Replication], persister: Option[Persistence], processor: Option[Notification])
+  def checkProcessing(replicator: Option[Replication], persister: Option[Persistence], processor: Option[ProcessingLogic])
                      (expectations: (JMockExpectations, IncomingMessageMatcher) => Unit) {
     underground = new Underground(replicator, persister, processor)
     val ready = context.states("ready").startsAs("no")
