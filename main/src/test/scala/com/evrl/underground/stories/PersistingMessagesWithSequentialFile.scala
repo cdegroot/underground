@@ -36,20 +36,6 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
     assertArrayEquals(buffer, message)
   }
 
-  test("SequentialFilePersistence persists multiple messages and can feed them back") {
-    val (message1, message2) = logSomeMessagesTo(persistence)
-    persistence.shutdown()
-
-    val muncher = mock[Recoverable]
-    expecting { e => import e._
-      oneOf(muncher).processMessage(`with`(matchMessage(message1)))
-      oneOf(muncher).processMessage(`with`(matchMessage(message2)))
-    }
-    whenExecuting {
-      persistence.recoverTo(muncher)
-    }
-  }
-
   test("SequentialFilePersistence will ignore partially written message") {
     val (message1, message2) = logSomeMessagesTo(persistence)
     persistence.shutdown()

@@ -1,7 +1,7 @@
 package com.evrl.underground
 
-import java.io.{ByteArrayOutputStream, FileInputStream, FileOutputStream, File}
 import java.util.UUID
+import java.io._
 
 /**
  * Very basic persistence that just writes everything to sequential log files.
@@ -37,9 +37,10 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
   var logFileTemplate = "message.log."
   var snapshotTemplate = "snapshot."
   var sequenceNumber = 0
-  var logFile = new File(base, logFileTemplate + sequenceNumber)
-  var writeStream = new FileOutputStream(logFile)
-  var marshall = new Marshaller(writeStream)
+  var logFile: File = _
+  var writeStream: OutputStream = _
+  var marshall: Marshaller = _
+  openLogFile
 
   override def persist(message : IncomingMessage) {
     message.operation match {
@@ -54,29 +55,56 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
     writeStream.write(bytes)
   }
 
+
+  def openLogFile {
+    logFile = new File(base, logFileTemplate + sequenceNumber)
+    writeStream = new FileOutputStream(logFile)
+    marshall = new Marshaller(writeStream)
+  }
+
   def snapshot(message : IncomingMessage) {
     shutdown
     sequenceNumber = sequenceNumber + 1
-    logFile.renameTo(new File(base,  logFileTemplate + sequenceNumber))
-    writeStream = new FileOutputStream(logFile)
-    marshall = new Marshaller(writeStream)
-    writeSequenceToData(sequenceNumber, message)
+    writeSnapshotNameToMessage(sequenceNumber, message)
+    openLogFile
   }
 
   override def shutdown {
     writeStream.close
   }
 
-  private def writeSequenceToData(seq : Int, message : IncomingMessage) {
+  private def writeSnapshotNameToMessage(seq : Int, message : IncomingMessage) {
     val bos = new ByteArrayOutputStream(60)
     val dataMarshall = new Marshaller(bos)
     dataMarshall.string(new File(base, snapshotTemplate + seq).getAbsolutePath)
     message.data = bos.toByteArray
   }
 
+  def sequenceNumberOf(file: File) : Int = {
+    val name = file.getName
+    name.substring(name.lastIndexOf('.') + 1).toInt
+  }
+
+  private def findLatestSnapshotSequenceNumber : Option[Int] = {
+    val files = base.listFiles()
+    val snapshots = files.
+      filter(_.getName.startsWith(snapshotTemplate)).
+      sortWith((f1, f2) => {sequenceNumberOf(f1) > sequenceNumberOf(f2)})
+    if (snapshots.length == 0) {
+      None
+    } else {
+      Some(sequenceNumberOf(snapshots.head))
+    }
+  }
+
   override def recoverTo(recoverable : Recoverable) {
-    // TODO[cdg] snapshot recovery
-    val readStream = new FileInputStream(logFile)
+    val latestSnapshotSequenceNumber = findLatestSnapshotSequenceNumber
+    latestSnapshotSequenceNumber.map{seqNo =>
+      val snapshotToRecoverFrom = snapshotTemplate + seqNo
+      recoverable.loadSnapshot(new File(base,snapshotToRecoverFrom).getAbsolutePath)
+    }
+    val logFileToRecoverFrom = logFileTemplate + latestSnapshotSequenceNumber.getOrElse(0)
+    val readStream = new FileInputStream(new File(base, logFileToRecoverFrom))
     val unmarshalled = new Unmarshaller(readStream)
     val totalLength = logFile.length()
     var processedLength = 0
@@ -92,6 +120,9 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
       processedLength = processedLength + messageLength + 4
     }
     readStream.close()
+    shutdown
+    sequenceNumber = latestSnapshotSequenceNumber.getOrElse(0) + 1
+    openLogFile
   }
 
   /**
