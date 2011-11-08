@@ -67,14 +67,15 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
     writeStream.close
   }
 
-  def writeSequenceToData(seq : Int, message : IncomingMessage) {
+  private def writeSequenceToData(seq : Int, message : IncomingMessage) {
     val bos = new ByteArrayOutputStream(60)
     val dataMarshall = new Marshaller(bos)
     dataMarshall.string(new File(base, snapshotTemplate + seq).getAbsolutePath)
     message.data = bos.toByteArray
   }
 
-  def feedMessagesTo(sink : IncomingDataHandler) {
+  override def recoverTo(recoverable : Recoverable) {
+    // TODO[cdg] snapshot recovery
     val readStream = new FileInputStream(logFile)
     val unmarshalled = new Unmarshaller(readStream)
     val totalLength = logFile.length()
@@ -85,7 +86,7 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
       if (messageLength > 0) {
         val numRead = readStream.read(data, 0, messageLength)
         if (numRead == messageLength) {
-          sink.process(data)
+          recoverable.processMessage(new IncomingMessage(data))
         }
       }
       processedLength = processedLength + messageLength + 4

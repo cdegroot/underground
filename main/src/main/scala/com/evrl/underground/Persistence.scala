@@ -26,5 +26,21 @@ trait MessageRecovery {
    * Loads all messages and presents them to the given sink.
    * @param sink processes recovered messages
    */
-  def feedMessagesTo(sink: IncomingDataHandler)
+  def recoverTo(sink: Recoverable)
+}
+
+/**
+ * The thing that actually gets recovered by MessageRecovery
+ */
+trait Recoverable {
+
+  /**
+   * Loads a snapshot from the specified file name
+   */
+  def loadSnapshot(snapshotFileName: String)
+
+  /**
+   * Processes the message
+   */
+  def processMessage(message: IncomingMessage)
 }

@@ -11,6 +11,7 @@ class IncomingMessage(var data : Array[Byte], var operation : Operation.Opcode =
 
   // serialize this incoming message
   def asBytes: Array[Byte] = data
+
 }
 
 object IncomingMessageFactory extends EventFactory[IncomingMessage]{

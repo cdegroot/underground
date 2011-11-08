@@ -2,10 +2,11 @@ package com.evrl.underground.stories
 
 import java.util.UUID
 import org.junit.Assert.assertArrayEquals
-import com.evrl.underground.{Unmarshaller, IncomingDataHandler, IncomingMessage, SequentialFilePersistence}
 import java.io.{FileOutputStream, FileInputStream, File}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FunSuite}
 import com.evrl.underground.testutils.{SuiteOnBasicSequentialFilePersistence, JMockCycle}
+import com.evrl.underground.testutils.IncomingMessageMatcherFactory._
+import com.evrl.underground._
 
 class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePersistence {
   import cycle._
@@ -15,7 +16,7 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
   // of code again). Also, the class under test really is dependent on the file system,
   // most of the code in there should just pass on calls.
 
-  test("MarshallerTest persists data on reception") {
+  test("SequentialFilePersistence persists data on reception") {
     val message = "Hello, world".getBytes
     val incomingMessage = new IncomingMessage(message)
 
@@ -35,22 +36,21 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
     assertArrayEquals(buffer, message)
   }
 
-
-  test("MarshallerTest persists multiple messages and can feed them back") {
+  test("SequentialFilePersistence persists multiple messages and can feed them back") {
     val (message1, message2) = logSomeMessagesTo(persistence)
     persistence.shutdown()
 
-    val muncher = mock[IncomingDataHandler]
+    val muncher = mock[Recoverable]
     expecting { e => import e._
-      oneOf(muncher).process(message1)
-      oneOf(muncher).process(message2)
+      oneOf(muncher).processMessage(`with`(matchMessage(message1)))
+      oneOf(muncher).processMessage(`with`(matchMessage(message2)))
     }
     whenExecuting {
-      persistence.feedMessagesTo(muncher)
+      persistence.recoverTo(muncher)
     }
   }
 
-  test("Marshaller will ignore partially written message") {
+  test("SequentialFilePersistence will ignore partially written message") {
     val (message1, message2) = logSomeMessagesTo(persistence)
     persistence.shutdown()
 
@@ -65,12 +65,12 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
     writeStream.close()
 
     // garbled message should be silently dropped
-    val muncher = context.mock(classOf[IncomingDataHandler], "muncher2")
+    val muncher = context.mock(classOf[Recoverable], "muncher2")
     expecting { e => import e._
-      oneOf(muncher).process(message1)
+      oneOf(muncher).processMessage(`with`(matchMessage(message1)))
     }
     whenExecuting {
-      persistence.feedMessagesTo(muncher)
+      persistence.recoverTo(muncher)
     }
   }
 
