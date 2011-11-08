@@ -5,9 +5,31 @@ import java.util.UUID
 
 /**
  * Very basic persistence that just writes everything to sequential log files.
- * Not thread safe, because meant to be called only from a single thread
+ * Not thread safe, because meant to be called only from a single thread.
+ * <br/>
+ * Log files are created in the base directory as message.log.<sequence number>. The
+ * sequence number increases every time a snapshot message is received. For example, if
+ * the directory has:
+ * <pre>
+ * message.log.00000000
+ * message.log.00000001
+ * message.log.00000002
+ * </pre>
+ * then snapshots 1 and 2 are expected to exist in the same directory:
+ * <pre>
+ * snapshot.00000001
+ * snapshot.00000002
+ * </pre>
+ * And on recovery, snapshot 2 will be loaded, after which message log 2 will be
+ * loaded and fed to the processor.
+ * <br/>
+ * This class is not responsible for snapshot writing and reading - the processing
+ * logic needs to do that. However, on a snapshot command, the class will put the
+ * expected file name of the snapshot file into the message, and on recovery, the
+ * class will work with the processing logic to load the correct snapshot and
+ * replay the correct messages (through the SnapshotRecovery trait).
  */
-class BasicSequentialFilePersistence(val baseDirName: String) extends Persistence with MessageRecovery {
+class SequentialFilePersistence(val baseDirName: String) extends Persistence with MessageRecovery {
 
   val base = new File(baseDirName)
   base.mkdirs()
@@ -77,9 +99,9 @@ class BasicSequentialFilePersistence(val baseDirName: String) extends Persistenc
   }
 }
 
-object BasicSequentialFilePersistence {
-  def onRandomDirectory : BasicSequentialFilePersistence = {
+object SequentialFilePersistence {
+  def onRandomDirectory : SequentialFilePersistence = {
     val randomDir = System.getProperty("java.io.tmpdir") + "/ug-" + UUID.randomUUID
-    new BasicSequentialFilePersistence(randomDir)
+    new SequentialFilePersistence(randomDir)
   }
 }

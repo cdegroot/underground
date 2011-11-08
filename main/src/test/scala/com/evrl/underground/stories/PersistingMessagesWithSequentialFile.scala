@@ -2,12 +2,12 @@ package com.evrl.underground.stories
 
 import java.util.UUID
 import org.junit.Assert.assertArrayEquals
-import com.evrl.underground.{Unmarshaller, IncomingDataHandler, IncomingMessage, BasicSequentialFilePersistence}
+import com.evrl.underground.{Unmarshaller, IncomingDataHandler, IncomingMessage, SequentialFilePersistence}
 import java.io.{FileOutputStream, FileInputStream, File}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FunSuite}
 import com.evrl.underground.testutils.{SuiteOnBasicSequentialFilePersistence, JMockCycle}
 
-class PersistingMessagesWithBasicSequentialFile extends SuiteOnBasicSequentialFilePersistence {
+class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePersistence {
   import cycle._
 
   // I don't mock File here for two reasons: the class is a bitch to mock (as usual in
@@ -74,7 +74,7 @@ class PersistingMessagesWithBasicSequentialFile extends SuiteOnBasicSequentialFi
     }
   }
 
-  def logSomeMessagesTo(persister : BasicSequentialFilePersistence) : (Array[Byte], Array[Byte]) = {
+  def logSomeMessagesTo(persister : SequentialFilePersistence) : (Array[Byte], Array[Byte]) = {
     val message1 = "Hello".getBytes
     val message2 = ", world".getBytes
     val im1 = new IncomingMessage(message1)

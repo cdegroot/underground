@@ -4,6 +4,13 @@ import com.lmax.disruptor.dsl.Disruptor
 import java.util.concurrent.Executors
 import com.lmax.disruptor.{EventHandler, WaitStrategy, ClaimStrategy}
 
+/**
+ * The core message processing class. Underground encapsulates a disruptor that is configured to
+ * hand off message to replication and persistence first before sending it to the processing
+ * logic. In this way, we know that messages are safe before we actually handle them.
+ *
+ * For purposes of testing and alternative configurations, all message handlers are optional.
+ */
 class Underground(replicator: Option[Replication],  persister: Option[Persistence], processor: Option[ProcessingLogic]) extends IncomingDataHandler {
 
   val executor = Executors.newFixedThreadPool(3)

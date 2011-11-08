@@ -1,16 +1,16 @@
 package com.evrl.underground.testutils
 
-import com.evrl.underground.BasicSequentialFilePersistence
+import com.evrl.underground.SequentialFilePersistence
 import org.scalatest.{FunSuite, BeforeAndAfter}
 
 class SuiteOnBasicSequentialFilePersistence extends FunSuite with BeforeAndAfter {
   val cycle = new JMockCycle
 
-  var persistence : BasicSequentialFilePersistence = _
+  var persistence : SequentialFilePersistence = _
   var logFile : String = _
 
   before {
-    persistence = BasicSequentialFilePersistence.onRandomDirectory
+    persistence = SequentialFilePersistence.onRandomDirectory
     logFile = persistence.baseDirName + "/message.log"
   }
   after {
