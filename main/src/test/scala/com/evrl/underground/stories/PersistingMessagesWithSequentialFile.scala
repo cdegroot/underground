@@ -17,8 +17,8 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
   // most of the code in there should just pass on calls.
 
   test("SequentialFilePersistence persists data on reception") {
-    val message = "Hello, world".getBytes
-    val incomingMessage = new IncomingMessage(message)
+    val message = "Hello, world"
+    val incomingMessage = IncomingMessage(message)
 
     persistence.persist(incomingMessage)
     persistence.shutdown
@@ -33,7 +33,7 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
     is.close
 
     assert(numRead == message.length, "read back wrong number of characterstest")
-    assertArrayEquals(buffer, message)
+    assertArrayEquals(buffer, message.getBytes)
   }
 
   test("SequentialFilePersistence will ignore partially written message") {
@@ -60,11 +60,11 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
     }
   }
 
-  def logSomeMessagesTo(persister : SequentialFilePersistence) : (Array[Byte], Array[Byte]) = {
-    val message1 = "Hello".getBytes
-    val message2 = ", world".getBytes
-    val im1 = new IncomingMessage(message1)
-    val im2 = new IncomingMessage(message2)
+  def logSomeMessagesTo(persister : SequentialFilePersistence) : (String, String) = {
+    val message1 = "Hello"
+    val message2 = ", world"
+    val im1 = IncomingMessage(message1)
+    val im2 = IncomingMessage(message2)
 
     persister.persist(im1)
     persister.persist(im2)

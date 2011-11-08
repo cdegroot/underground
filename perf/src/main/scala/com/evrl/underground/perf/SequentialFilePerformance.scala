@@ -12,7 +12,7 @@ object SequentialFilePerformance extends App {
   val task = new Runnable {
     def run {
       val persistence = SequentialFilePersistence.onRandomDirectory
-      val message = new IncomingMessage("hello, world, how are you".getBytes) // 25 bytes if you want to calculate throughput
+      val message = IncomingMessage("hello, world, how are you") // 25 bytes if you want to calculate throughput
       for (i <- 0 until iterations) {
         persistence.persist(message)
       }
