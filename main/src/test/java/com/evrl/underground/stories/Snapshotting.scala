@@ -17,8 +17,8 @@ class Snapshotting extends SuiteOnBasicSequentialFilePersistence {
     persistence.persist(new IncomingMessage("bye".getBytes))
     persistence.shutdown
 
-    assert(new File(logFile).exists, "New log file was not created")
-    assert(new File(persistence.baseDirName + "/message.log.0").exists, "Old log file was not rotated")
+    assert(new File(logFileBase + "1").exists, "New log file was not created")
+    assert(new File(logFileBase + "0").exists, "Old log file was not rotated")
 
     val unMarshaller = new Unmarshaller(new ByteArrayInputStream(snapshotMessage.data))
     val sequence = unMarshaller.int

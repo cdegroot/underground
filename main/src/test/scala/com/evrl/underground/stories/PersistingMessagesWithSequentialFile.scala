@@ -22,7 +22,7 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
     persistence.persist(incomingMessage)
     persistence.shutdown
 
-    val lf : File = new File(logFile)
+    val lf : File = new File(logFileBase + "0")
     assert(lf.exists, "log file was not created")
     val is = new FileInputStream(lf)
     val ms = new Unmarshaller(is)

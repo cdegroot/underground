@@ -11,14 +11,14 @@ import java.util.UUID
  * sequence number increases every time a snapshot message is received. For example, if
  * the directory has:
  * <pre>
- * message.log.00000000
- * message.log.00000001
- * message.log.00000002
+ * message.log.0
+ * message.log.1
+ * message.log.2
  * </pre>
  * then snapshots 1 and 2 are expected to exist in the same directory:
  * <pre>
- * snapshot.00000001
- * snapshot.00000002
+ * snapshot.1
+ * snapshot.2
  * </pre>
  * And on recovery, snapshot 2 will be loaded, after which message log 2 will be
  * loaded and fed to the processor.
@@ -34,8 +34,8 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
   val base = new File(baseDirName)
   base.mkdirs()
 
-  // TODO[cdg] - how to make this immutable? Do we need/want to?
-  var logFile = new File(base, "message.log")
+  var logFileTemplate = "message.log."
+  var logFile = new File(base, logFileTemplate + "0")
   var writeStream = new FileOutputStream(logFile)
   var marshall = new Marshaller(writeStream)
 
@@ -54,7 +54,7 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
 
   def snapshot(message : IncomingMessage) {
     shutdown
-    logFile.renameTo(new File(logFile.getAbsolutePath + ".0"))
+    logFile.renameTo(new File(logFile.getParentFile.getAbsolutePath + "/" + logFileTemplate + "1"))
     writeStream = new FileOutputStream(logFile)
     marshall = new Marshaller(writeStream)
     writeSequenceToData(0, message)

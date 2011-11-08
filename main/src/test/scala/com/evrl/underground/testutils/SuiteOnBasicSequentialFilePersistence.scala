@@ -7,11 +7,11 @@ class SuiteOnBasicSequentialFilePersistence extends FunSuite with BeforeAndAfter
   val cycle = new JMockCycle
 
   var persistence : SequentialFilePersistence = _
-  var logFile : String = _
+  var logFileBase : String = _
 
   before {
     persistence = SequentialFilePersistence.onRandomDirectory
-    logFile = persistence.baseDirName + "/message.log"
+    logFileBase = persistence.baseDirName + "/message.log."
   }
   after {
     persistence.destroyData
