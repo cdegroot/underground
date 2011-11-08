@@ -35,7 +35,9 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
   base.mkdirs()
 
   var logFileTemplate = "message.log."
-  var logFile = new File(base, logFileTemplate + "0")
+  var snapshotTemplate = "snapshot."
+  var sequenceNumber = 0
+  var logFile = new File(base, logFileTemplate + sequenceNumber)
   var writeStream = new FileOutputStream(logFile)
   var marshall = new Marshaller(writeStream)
 
@@ -54,10 +56,11 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
 
   def snapshot(message : IncomingMessage) {
     shutdown
-    logFile.renameTo(new File(logFile.getParentFile.getAbsolutePath + "/" + logFileTemplate + "1"))
+    sequenceNumber = sequenceNumber + 1
+    logFile.renameTo(new File(base,  logFileTemplate + sequenceNumber))
     writeStream = new FileOutputStream(logFile)
     marshall = new Marshaller(writeStream)
-    writeSequenceToData(0, message)
+    writeSequenceToData(sequenceNumber, message)
   }
 
   override def shutdown {
@@ -65,9 +68,9 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
   }
 
   def writeSequenceToData(seq : Int, message : IncomingMessage) {
-    val bos = new ByteArrayOutputStream(4)
+    val bos = new ByteArrayOutputStream(60)
     val dataMarshall = new Marshaller(bos)
-    dataMarshall.int(seq)
+    dataMarshall.string(new File(base, snapshotTemplate + seq).getAbsolutePath)
     message.data = bos.toByteArray
   }
 
@@ -101,7 +104,7 @@ class SequentialFilePersistence(val baseDirName: String) extends Persistence wit
 
 object SequentialFilePersistence {
   def onRandomDirectory : SequentialFilePersistence = {
-    val randomDir = System.getProperty("java.io.tmpdir") + "/ug-" + UUID.randomUUID
+    val randomDir = new File(new File(System.getProperty("java.io.tmpdir")), "ug-" + UUID.randomUUID).getAbsolutePath
     new SequentialFilePersistence(randomDir)
   }
 }

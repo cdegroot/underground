@@ -5,6 +5,7 @@ import java.io.{ByteArrayInputStream, File}
 import com.evrl.underground._
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FunSuite}
 import testutils.{SuiteOnBasicSequentialFilePersistence, JMockCycle}
+import org.scalatest.Assertions._
 
 class Snapshotting extends SuiteOnBasicSequentialFilePersistence {
 
@@ -15,13 +16,27 @@ class Snapshotting extends SuiteOnBasicSequentialFilePersistence {
     val snapshotMessage = new IncomingMessage(null, Operation.Snapshot)
     persistence.persist(snapshotMessage)
     persistence.persist(new IncomingMessage("bye".getBytes))
-    persistence.shutdown
 
     assert(new File(logFileBase + "1").exists, "New log file was not created")
     assert(new File(logFileBase + "0").exists, "Old log file was not rotated")
 
-    val unMarshaller = new Unmarshaller(new ByteArrayInputStream(snapshotMessage.data))
-    val sequence = unMarshaller.int
-    assert(sequence == 0, "Incorrect sequence number in data of operation (found " + sequence + ")")
+    var unMarshaller = new Unmarshaller(new ByteArrayInputStream(snapshotMessage.data))
+    var fileName = unMarshaller.string
+    var expectedFileName = persistence.baseDirName + "/snapshot.1"
+    assert(expectedFileName.equals(fileName), "Did not find expected snapshot file name (saw %s, wanted %s)".format(fileName, expectedFileName))
+
+    // and another snapshot
+    persistence.persist(snapshotMessage)
+    persistence.persist(new IncomingMessage("again".getBytes))
+
+    assert(new File(logFileBase + "0").exists, "Oldest log file was not preserved")
+    assert(new File(logFileBase + "1").exists, "Middle log file was not preserved")
+    assert(new File(logFileBase + "2").exists, "New log file was not created")
+
+    unMarshaller = new Unmarshaller(new ByteArrayInputStream(snapshotMessage.data))
+    fileName = unMarshaller.string
+    expectedFileName = persistence.baseDirName + "/snapshot.2"
+    assert(expectedFileName.equals(fileName), "Did not find expected snapshot file name (saw %s, wanted %s)".format(fileName, expectedFileName))
+
   }
 }
