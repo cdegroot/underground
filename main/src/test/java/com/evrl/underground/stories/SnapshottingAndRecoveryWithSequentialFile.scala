@@ -13,11 +13,11 @@ class SnapshottingAndRecoveryWithSequentialFile extends SuiteOnBasicSequentialFi
 
   test("Snapshot operation will roll over log file and set data to snapshot base name") {
 
-    persistence.persist(new IncomingMessage("hello, ".getBytes))
-    persistence.persist(new IncomingMessage("world".getBytes))
+    persistence.persist(IncomingMessage("hello, "))
+    persistence.persist(IncomingMessage("world"))
     val snapshotMessage = new IncomingMessage(null, Operation.Snapshot)
     persistence.persist(snapshotMessage)
-    persistence.persist(new IncomingMessage("bye".getBytes))
+    persistence.persist(IncomingMessage("bye"))
 
     assert(new File(logFileBase + "0").exists, "Old log file does not exist")
     assert(new File(logFileBase + "1").exists, "New log file was not created")
@@ -29,7 +29,7 @@ class SnapshottingAndRecoveryWithSequentialFile extends SuiteOnBasicSequentialFi
 
     // and another snapshot
     persistence.persist(snapshotMessage)
-    persistence.persist(new IncomingMessage("again".getBytes))
+    persistence.persist(IncomingMessage("again"))
 
     assert(new File(logFileBase + "0").exists, "Oldest log file was not preserved")
     assert(new File(logFileBase + "1").exists, "Middle log file was not preserved")
@@ -43,15 +43,15 @@ class SnapshottingAndRecoveryWithSequentialFile extends SuiteOnBasicSequentialFi
   }
 
   test("Recovery will pick up from correct point") {
-    persistence.persist(new IncomingMessage("hello, ".getBytes))
-    persistence.persist(new IncomingMessage("world".getBytes))
+    persistence.persist(IncomingMessage("hello, "))
+    persistence.persist(IncomingMessage("world"))
     val snapshotMessage = new IncomingMessage(null, Operation.Snapshot)
     persistence.persist(snapshotMessage)
     new File(persistence.baseDirName + "/snapshot.1").createNewFile()
-    persistence.persist(new IncomingMessage("bye".getBytes))
+    persistence.persist(IncomingMessage("bye"))
     persistence.persist(snapshotMessage)
     new File(persistence.baseDirName + "/snapshot.2").createNewFile()
-    persistence.persist(new IncomingMessage("live again".getBytes))
+    persistence.persist(IncomingMessage("live again"))
     persistence.shutdown
 
     // We now have log 0, snapshot 1, log 1, snapshot 2, log 2.
@@ -67,8 +67,8 @@ class SnapshottingAndRecoveryWithSequentialFile extends SuiteOnBasicSequentialFi
   }
 
   test("Recovery will recover from just a 0 logfile") {
-    persistence.persist(new IncomingMessage("hello, ".getBytes))
-    persistence.persist(new IncomingMessage("world".getBytes))
+    persistence.persist(IncomingMessage("hello, "))
+    persistence.persist(IncomingMessage("world"))
 
     val muncher = context.mock(classOf[Recoverable], "noShapshotRecoverable")
     expecting {
@@ -82,8 +82,7 @@ class SnapshottingAndRecoveryWithSequentialFile extends SuiteOnBasicSequentialFi
   }
 
   test("After recovery, a new logfile has been created") {
-    // TODO[CdG] a string constructor for IncomingMessage - it's getting silly
-    persistence.persist(new IncomingMessage("hello, ".getBytes))
+    persistence.persist(IncomingMessage("hello, "))
     persistence.shutdown
 
     persistence.recoverTo(new Recoverable {
