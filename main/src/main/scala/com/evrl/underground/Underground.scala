@@ -3,6 +3,7 @@ package com.evrl.underground
 import com.lmax.disruptor.dsl.Disruptor
 import java.util.concurrent.Executors
 import com.lmax.disruptor.{EventHandler, WaitStrategy, ClaimStrategy}
+import java.nio.ByteBuffer
 
 /**
  * The core message processing class. Underground encapsulates a disruptor that is configured to
