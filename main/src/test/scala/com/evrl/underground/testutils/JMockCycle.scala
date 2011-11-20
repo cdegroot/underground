@@ -42,9 +42,22 @@ final class JMockCycle {
     context.checking(e)
   }
 
-
   def whenExecuting(fun: => Unit) = {
     fun
     context.assertIsSatisfied()
+  }
+
+  def waitUntilSatisfied(maxWaitTime: Int) {
+    val until = System.currentTimeMillis + maxWaitTime
+    while (until > System.currentTimeMillis) {
+      try {
+        try {
+          context.assertIsSatisfied
+          return
+        } catch {
+          case t: Throwable => Thread.`yield`
+        }
+      }
+    }
   }
 }

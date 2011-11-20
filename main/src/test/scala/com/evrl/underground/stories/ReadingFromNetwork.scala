@@ -5,6 +5,7 @@ import com.evrl.underground.testutils.JMockCycle
 import com.evrl.underground.{NetworkInput, IncomingDataHandler}
 import java.net.Socket
 import java.lang.Thread
+import org.jmock.Mockery
 
 class ReadingFromNetwork extends FunSuite {
   val cycle = new JMockCycle
@@ -24,7 +25,7 @@ class ReadingFromNetwork extends FunSuite {
       thread.start
       val socket = new Socket("localhost", networkInput.listeningPort)
       socket.getOutputStream.write(message)
-      Thread.sleep(1000) // TODO[CdG] fixme - we don't want sleeps in tests
+      waitUntilSatisfied(100)
       socket.close
       thread.stop
     }
