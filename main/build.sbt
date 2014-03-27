@@ -1,6 +1,6 @@
 
 libraryDependencies ++= Seq(
-	"org.scalatest" %% "scalatest"        % "1.6.1" % "test",
+	"org.scalatest" %% "scalatest"        % "1.9.1" % "test",
 	"org.jmock"      % "jmock"            % "2.5.1" % "test",
 	"org.jmock"      % "jmock-legacy"     % "2.5.1" % "test",
 	"cglib"		 % "cglib-nodep"      % "2.1_3" % "test",

@@ -13,7 +13,7 @@ class ReadingFromNetwork extends FunSuite {
 
   test("Reading from network results in packets landing at incoming data handler") {
     val mockHandler = mock[IncomingDataHandler]
-    val networkInput = new NetworkInput(mockHandler)
+    val networkInput = new NetworkInput(mockHandler, 0)
     val message = "Hello, world".getBytes
     expecting { e => import e._
       oneOf(mockHandler).process(`with`(message))
@@ -23,7 +23,7 @@ class ReadingFromNetwork extends FunSuite {
         def run = networkInput.handleRequests
       })
       thread.start
-      val socket = new Socket("localhost", networkInput.listeningPort)
+      val socket = new Socket("localhost", networkInput.serverSocketChannel.socket().getLocalPort)
       socket.getOutputStream.write(message)
       waitUntilSatisfied(100)
       socket.close

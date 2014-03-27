@@ -10,9 +10,11 @@ import java.nio.ByteBuffer
  * hand off message to replication and persistence first before sending it to the processing
  * logic. In this way, we know that messages are safe before we actually handle them.
  *
- * For purposes of testing and alternative configurations, all message handlers are optional.
+ * For purposes of testing and to allow for alternative configurations, all message handlers are optional.
  */
-class Underground(replicator: Option[Replication],  persister: Option[Persistence], processor: Option[ProcessingLogic]) extends IncomingDataHandler {
+class Underground(replicator: Option[Replication],
+                  persister: Option[Persistence],
+                  processor: Option[ProcessingLogic]) extends IncomingDataHandler {
 
   val executor = Executors.newFixedThreadPool(3)
 

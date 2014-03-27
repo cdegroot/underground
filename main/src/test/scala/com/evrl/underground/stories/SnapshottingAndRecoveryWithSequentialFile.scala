@@ -1,12 +1,10 @@
 package com.evrl.underground.stories
 
-import java.util.UUID
 import java.io.{ByteArrayInputStream, File}
 import com.evrl.underground._
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterEach, FunSuite}
+import org.scalatest.BeforeAndAfter
 import testutils.IncomingMessageMatcherFactory._
 import testutils.{SuiteOnBasicSequentialFilePersistence, JMockCycle}
-import org.scalatest.Assertions._
 
 class SnapshottingAndRecoveryWithSequentialFile extends SuiteOnBasicSequentialFilePersistence {
   import cycle._

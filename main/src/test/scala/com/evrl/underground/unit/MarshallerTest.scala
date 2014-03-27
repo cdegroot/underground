@@ -3,10 +3,7 @@ package com.evrl.underground.unit
 import org.scalatest.FunSuite
 import com.evrl.underground.testutils.JMockCycle
 import com.evrl.underground.{Unmarshaller, Marshaller}
-import com.sun.xml.internal.ws.developer.MemberSubmissionAddressing.Validation
-import com.sun.jdi.Value
-import java.util.Arrays
-import org.hamcrest.{Description, BaseMatcher, Matcher}
+import org.hamcrest.{Description, BaseMatcher}
 import java.io.{ByteArrayInputStream, InputStream, OutputStream}
 
 class MarshallerTest extends FunSuite {
