@@ -15,7 +15,7 @@ class QueueingMessages extends FunSuite with BeforeAndAfter {
   import cycle._
 
   val message = "Hello, world!"
-  var underground : Underground = _;
+  var underground : Underground = _
 
   after {
     if (underground != null) {

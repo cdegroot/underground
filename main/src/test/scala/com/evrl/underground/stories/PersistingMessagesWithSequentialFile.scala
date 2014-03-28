@@ -37,7 +37,7 @@ class PersistingMessagesWithSequentialFile extends SuiteOnBasicSequentialFilePer
   }
 
   test("SequentialFilePersistence will ignore partially written message") {
-    val (message1, message2) = logSomeMessagesTo(persistence)
+    val (message1, _) = logSomeMessagesTo(persistence)
     persistence.shutdown()
 
     // Now copy, truncate, and write short output

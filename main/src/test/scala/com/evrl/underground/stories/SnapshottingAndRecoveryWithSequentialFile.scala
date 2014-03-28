@@ -53,7 +53,7 @@ class SnapshottingAndRecoveryWithSequentialFile extends SuiteOnBasicSequentialFi
     persistence.shutdown
 
     // We now have log 0, snapshot 1, log 1, snapshot 2, log 2.
-    // recovery needs to be from snapshot 2 and then reply from log 2
+    // recovery needs to be from snapshot 2 and then replay from log 2
     val recoverable = mock[Recoverable]
     expecting { e => import e._
       oneOf(recoverable).loadSnapshot(persistence.baseDirName + "/snapshot.2")

@@ -23,7 +23,7 @@ class ReadingFromNetwork extends FunSuite {
         def run = networkInput.handleRequests
       })
       thread.start
-      val socket = new Socket("localhost", networkInput.serverSocketChannel.socket().getLocalPort)
+      val socket = new Socket("localhost", networkInput.serverPort)
       socket.getOutputStream.write(message)
       waitUntilSatisfied(100)
       socket.close

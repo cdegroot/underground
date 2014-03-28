@@ -23,6 +23,12 @@ class NetworkInput(sink: IncomingDataHandler, val listeningPort: Int = 0xcafe) {
   val readBufferSize = 32 * 1024
   val readBuffer = ByteBuffer.allocate(readBufferSize)
 
+  /** Just in case you pass in 0 for the listingPort, you might want to
+    * know where we end up listening.
+    * @return The listening port.
+    */
+  lazy val serverPort = serverSocketChannel.socket().getLocalPort
+
   private def accept(key: SelectionKey) {
     val serverSocketChannel = key.channel.asInstanceOf[ServerSocketChannel]
     val socketChannel = serverSocketChannel.accept

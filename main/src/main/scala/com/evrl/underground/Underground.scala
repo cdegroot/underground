@@ -14,14 +14,14 @@ import java.nio.ByteBuffer
  */
 class Underground(replicator: Option[Replication],
                   persister: Option[Persistence],
-                  processor: Option[ProcessingLogic]) extends IncomingDataHandler {
+                  processor: Option[ProcessingLogic],
+                  ringBufferSize: Int = 128) extends IncomingDataHandler {
 
   val executor = Executors.newFixedThreadPool(3)
 
-  // TODO[cdg] - make at least the ring buffer size configurable
   val disruptor = new Disruptor(
     IncomingMessageFactory,
-    128,
+    ringBufferSize,
     executor,
     ClaimStrategy.Option.SINGLE_THREADED,
     WaitStrategy.Option.YIELDING)
