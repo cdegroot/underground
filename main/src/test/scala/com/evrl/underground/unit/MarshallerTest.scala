@@ -52,7 +52,7 @@ class MarshallerTest extends FunSuite {
       oneOf(os).write(marshalledBytes, 0, marshalledBytes.length)
     }
     whenExecuting {
-      val answer = ms.string("Hello, world")
+      ms.string("Hello, world")
     }
   }
 
@@ -63,5 +63,31 @@ class MarshallerTest extends FunSuite {
 
     val string = ms.string
     assert("Hello, world".equals(string))
+  }
+
+  test("marshalling bytes") {
+    val os = context.mock(classOf[OutputStream], "streamForByteMarshall")
+    val ms = new Marshaller(os)
+    val marshalledLength = Array[Byte](0, 0, 0, 12)
+    val marshalledBytes = Array[Byte](72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100)
+    expecting { e => import e._
+      oneOf(os).write(marshalledLength, 0, marshalledLength.length)
+      oneOf(os).write(marshalledBytes, 0, marshalledBytes.length)
+    }
+    whenExecuting {
+       ms.bytes(marshalledBytes)
+    }
+  }
+
+  test("unmarshalling bytes") {
+    val marshalled = Array[Byte](0, 0, 0, 12, 72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100)
+    val expected   = Array[Byte](72, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100)
+    val is = new ByteArrayInputStream(marshalled)
+    val ms = new Unmarshaller(is)
+
+    val bytes = ms.bytes
+    expected.zip(bytes).map{ case (m, b) =>
+      assert(m == b, "Unexpected byte " + b + ", expected " + m)
+    }
   }
 }
